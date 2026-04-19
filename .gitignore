@@ -1,0 +1,21 @@
+# Markdown: only README.md tracked at root
+*.md
+!README.md
+!**/README.md
+
+# Excluded root folders
+docs/
+resources/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
+
+# Env files
+.env
+.env.*
+!.env.example

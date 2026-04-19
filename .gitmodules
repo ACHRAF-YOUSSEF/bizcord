@@ -1,0 +1,12 @@
+[submodule "bizcord-backend"]
+	path = bizcord-backend
+	url = https://github.com/ACHRAF-YOUSSEF/bizcord-backend.git
+	branch = feat/rtc
+[submodule "bizcord-frontend"]
+	path = bizcord-frontend
+	url = https://github.com/ACHRAF-YOUSSEF/bizcord-frontend.git
+	branch = main
+[submodule "bizcord-mediasoup"]
+	path = bizcord-mediasoup
+	url = https://github.com/ACHRAF-YOUSSEF/bizcord-mediasoup.git
+	branch = main
