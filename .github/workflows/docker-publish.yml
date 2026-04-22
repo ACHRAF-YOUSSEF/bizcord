@@ -48,6 +48,27 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Extract application version
+        id: app_version
+        shell: bash
+        run: |
+          if [[ "${{ matrix.service.name }}" == "backend" ]]; then
+            version="$(awk '
+              /<\/parent>/ { parent_done=1; next }
+              parent_done && match($0, /<version>([^<]+)<\/version>/, m) {
+                print m[1]
+                exit
+              }
+            ' "${{ matrix.service.context }}/pom.xml")"
+          else
+            version="$(sed -n 's/.*"version": "\(.*\)".*/\1/p' "${{ matrix.service.context }}/package.json" | head -n 1)"
+          fi
+
+          major_minor="$(echo "$version" | cut -d. -f1-2)"
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "major_minor=$major_minor" >> "$GITHUB_OUTPUT"
+
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -56,10 +77,41 @@ jobs:
           tags: |
             type=ref,event=branch
             type=ref,event=tag
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=${{ steps.app_version.outputs.version }}
+            type=raw,value=${{ steps.app_version.outputs.major_minor }}
             type=sha,format=short
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Delete existing Docker Hub tags
+        shell: bash
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          IMAGE: ${{ matrix.service.image }}
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          auth_response="$(curl -fsSL -X POST "https://hub.docker.com/v2/users/login/" \
+            -H "Content-Type: application/json" \
+            -d "{\"username\":\"${DOCKERHUB_USERNAME}\",\"password\":\"${DOCKERHUB_TOKEN}\"}")"
+          access_token="$(echo "$auth_response" | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')"
+
+          image_name="${IMAGE##*/}"
+          namespace="${IMAGE%/*}"
+
+          while IFS= read -r image_tag; do
+            [ -n "$image_tag" ] || continue
+
+            tag="${image_tag##*:}"
+
+            status_code="$(curl -s -o /dev/null -w "%{http_code}" \
+              -X DELETE "https://hub.docker.com/v2/namespaces/${namespace}/repositories/${image_name}/tags/${tag}/" \
+              -H "Authorization: Bearer ${access_token}")"
+
+            if [[ "$status_code" != "204" && "$status_code" != "404" ]]; then
+              echo "Failed deleting ${IMAGE}:${tag} (HTTP ${status_code})"
+              exit 1
+            fi
+          done <<< "$TAGS"
 
       - name: Build and push
         uses: docker/build-push-action@v6

@@ -21,3 +21,5 @@ Thumbs.db
 !.env.example
 
 .codex
+
+compose-*.yml
