@@ -23,3 +23,7 @@ Thumbs.db
 .codex
 
 compose-*.yml
+# Added by code-review-graph
+.code-review-graph/
+.mcp.json
+.claude
