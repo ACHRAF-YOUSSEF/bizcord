@@ -60,7 +60,7 @@ bizcord-backend (Spring Boot:8080)
   ├── STOMP WS   → real-time messages, typing, notifications
   └── REST calls → bizcord-mediasoup:3000 (voice room orchestration)
   
-bizcord-mediasoup (Node.js:3000)
+bizcord-mediasoup (Bun:3000)
   └── WebRTC SFU → UDP/TCP 52000–52999 (direct browser ↔ SFU)
   
 bizcord-postgres (PostgreSQL 17:5432)
