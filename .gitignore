@@ -27,3 +27,4 @@ compose-*.yml
 .code-review-graph/
 .mcp.json
 .claude
+.claude/

@@ -42,6 +42,10 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Set up Bun
+        if: matrix.service.name != 'backend'
+        uses: oven-sh/setup-bun@v2
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -52,16 +56,19 @@ jobs:
         id: app_version
         shell: bash
         run: |
-          if [[ "${{ matrix.service.name }}" == "backend" ]]; then
+          SERVICE_NAME="${{ matrix.service.name }}"
+          SERVICE_CONTEXT="${{ matrix.service.context }}"
+
+          if [[ "$SERVICE_NAME" == "backend" ]]; then
             version="$(awk '
               /<\/parent>/ { parent_done=1; next }
               parent_done && match($0, /<version>([^<]+)<\/version>/, m) {
                 print m[1]
                 exit
               }
-            ' "${{ matrix.service.context }}/pom.xml")"
+            ' "$SERVICE_CONTEXT/pom.xml")"
           else
-            version="$(sed -n 's/.*"version": "\(.*\)".*/\1/p' "${{ matrix.service.context }}/package.json" | head -n 1)"
+            version="$(bun -e "const pkg = await Bun.file('$SERVICE_CONTEXT/package.json').json(); console.log(pkg.version)")"
           fi
 
           major_minor="$(echo "$version" | cut -d. -f1-2)"
