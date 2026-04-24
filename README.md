@@ -37,7 +37,7 @@ BizCord is a self-hosted, full-featured team communication platform inspired by 
 - **Real-time text messaging** in server channels and direct messages
 - **Voice & video channels** powered by a WebRTC Selective Forwarding Unit (mediasoup v3)
 - **Server & channel management** with drag-and-drop ordering, invite links, and member roles
-- **File uploads**, emoji reactions, typing indicators, message search, and notifications
+- **File uploads**, emoji reactions, typing indicators, user status, message search, and notifications
 
 The entire stack runs in Docker Compose — four containers, one command.
 
@@ -91,6 +91,7 @@ bizcord-postgres (PostgreSQL 17:5432)
 - **File Uploads** — Images and attachments (up to 4 MB) in messages; custom server icons and profile avatars
 - **Emoji Reactions** — React to any message
 - **Typing Indicators** — Live presence in channels and DMs
+- **User Status** — Online, Idle, Do Not Disturb, and Invisible statuses with persistent preferred status
 - **Notifications** — Real-time in-app notification feed
 - **Message Search** — Full-text search across a server's channels
 - **Rate Limiting** — Per-endpoint throttling via Bucket4j
