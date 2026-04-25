@@ -37,6 +37,7 @@ BizCord is a self-hosted, full-featured team communication platform inspired by 
 - **Real-time text messaging** in server channels and direct messages
 - **Voice & video channels** powered by a WebRTC Selective Forwarding Unit (mediasoup v3)
 - **Server & channel management** with drag-and-drop ordering, invite links, and member roles
+- **Email verification** on registration and a full forgot/reset password flow
 - **File uploads**, emoji reactions, typing indicators, user status, message search, and notifications
 
 The entire stack runs in Docker Compose — four containers, one command.
@@ -83,6 +84,8 @@ bizcord-postgres (PostgreSQL 17:5432)
 ## ✨ Features
 
 - **Authentication** — Register / login / logout with JWT access tokens; refresh tokens stored in HttpOnly cookies for passive token rotation
+- **Email Verification** — Confirmation email on registration; account activation via link; resend endpoint
+- **Password Reset** — Forgot-password flow with time-limited reset link sent by email
 - **Servers** — Create and manage servers, invite members via shareable links
 - **Text Channels** — Real-time message delivery, edits, deletes, pagination
 - **Channel Categories** — Collapsible categories with drag-and-drop ordering
@@ -202,6 +205,14 @@ MEDIASOUP_RTC_MAX_PORT=52999
 | `MEDIASOUP_ANNOUNCED_IP` | mediasoup | `127.0.0.1` | Public IP for WebRTC ICE |
 | `MEDIASOUP_RTC_MIN_PORT` | mediasoup | `52000` | RTC port range start |
 | `MEDIASOUP_RTC_MAX_PORT` | mediasoup | `52999` | RTC port range end |
+| `MAIL_HOST` | backend | `localhost` | SMTP server hostname |
+| `MAIL_PORT` | backend | `1025` | SMTP server port |
+| `MAIL_USERNAME` | backend | — | SMTP username |
+| `MAIL_PASSWORD` | backend | — | SMTP password |
+| `MAIL_SMTP_AUTH` | backend | `false` | Enable SMTP authentication |
+| `MAIL_SMTP_STARTTLS` | backend | `false` | Enable STARTTLS |
+| `MAIL_FROM` | backend | `noreply@bizcord.achrafyoussef.tech` | Sender address for outgoing emails |
+| `APP_FRONTEND_URL` | backend | `https://bizcord.achrafyoussef.tech` | Base URL embedded in verification/reset email links |
 
 ---
 
