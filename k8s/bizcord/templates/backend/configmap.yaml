@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bizcord-backend-config
+  namespace: {{ include "bizcord.namespace" . }}
+  labels:
+    {{- include "bizcord.labels" . | nindent 4 }}
+data:
+  SPRING_PROFILES_ACTIVE: {{ .Values.backend.config.springProfilesActive | quote }}
+  DB_URL: {{ printf "jdbc:postgresql://bizcord-postgres:%d/%s" (int .Values.postgres.port) .Values.postgres.database | quote }}
+  DB_USERNAME: {{ .Values.postgres.username | quote }}
+  API_SECRET: {{ .Values.backend.config.apiSecret | quote }}
+  APP_JWT_PRIVATE_KEY_PATH: {{ .Values.backend.config.jwtPrivateKeyPath | quote }}
+  APP_JWT_PUBLIC_KEY_PATH: {{ .Values.backend.config.jwtPublicKeyPath | quote }}
+  APP_CORS_ALLOWED_ORIGIN_PATTERNS: {{ .Values.backend.config.corsAllowedOriginPatterns | quote }}
+  APP_COOKIE_SECURE: {{ .Values.backend.config.cookieSecure | quote }}
+  APP_FRONTEND_URL: {{ .Values.backend.config.frontendUrl | quote }}
+  APP_MEDIASOUP_URL: {{ .Values.backend.config.mediasoupUrl | quote }}
+  APP_STORAGE_MINIO_ENDPOINT: {{ .Values.backend.config.minioEndpoint | quote }}
+  APP_STORAGE_MINIO_BUCKET: {{ .Values.backend.config.minioBucket | quote }}
+  APP_STORAGE_MINIO_SECURE: {{ .Values.backend.config.minioSecure | quote }}
+  APP_STORAGE_PUBLIC_BASE_PATH: {{ .Values.backend.config.storagePublicBasePath | quote }}
+  MAIL_HOST: {{ .Values.backend.config.mailHost | quote }}
+  MAIL_PORT: {{ .Values.backend.config.mailPort | quote }}
+  MAIL_FROM: {{ .Values.backend.config.mailFrom | quote }}
+  MAIL_SMTP_AUTH: {{ .Values.backend.config.mailSmtpAuth | quote }}
+  MAIL_SMTP_STARTTLS: {{ .Values.backend.config.mailSmtpStarttls | quote }}

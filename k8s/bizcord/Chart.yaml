@@ -1,0 +1,6 @@
+apiVersion: v2
+name: bizcord
+description: BizCord — real-time chat platform with WebRTC voice/video
+type: application
+version: 0.1.0
+appVersion: "latest"

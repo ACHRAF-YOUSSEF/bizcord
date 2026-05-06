@@ -1,0 +1,38 @@
+global:
+  namespace: bizcord-dev
+  imagePullPolicy: Always
+
+backend:
+  config:
+    corsAllowedOriginPatterns: "http://localhost:*"
+    cookieSecure: "false"
+    mailHost: mailpit
+  secrets:
+    dbPassword: devpassword
+    minioAccessKey: minioadmin
+    minioSecretKey: minioadmin
+    mediasoupApiSecret: dev-mediasoup-secret
+
+frontend:
+  service:
+    type: NodePort
+    nodePort: 30080
+
+mediasoup:
+  announcedIp: "127.0.0.1"
+  secrets:
+    apiSecret: dev-mediasoup-secret
+
+postgres:
+  secrets:
+    password: devpassword
+
+minio:
+  secrets:
+    rootPassword: devpassword
+
+mailpit:
+  enabled: true
+
+ingress:
+  enabled: false

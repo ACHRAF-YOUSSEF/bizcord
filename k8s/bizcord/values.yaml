@@ -1,0 +1,160 @@
+global:
+  namespace: bizcord
+  imageRegistry: achrafyoussef
+  imagePullPolicy: IfNotPresent
+  storageClass: standard
+
+# ─────────────────────────────────────────────
+# Backend (Spring Boot)
+# ─────────────────────────────────────────────
+backend:
+  image:
+    tag: latest
+  replicas: 1
+  port: 8080
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  config:
+    springProfilesActive: prod
+    corsAllowedOriginPatterns: "http://localhost:8080"
+    frontendUrl: "http://localhost:8080"
+    cookieSecure: "false"
+    apiSecret: "bizcord-api-secret"
+    minioEndpoint: "http://bizcord-minio:9000"
+    minioBucket: "bizcord"
+    minioSecure: "false"
+    storagePublicBasePath: "/api/uploads"
+    # mediasoup runs hostNetwork — backend reaches it via localhost on the same node
+    mediasoupUrl: "http://localhost:3000"
+    mailHost: "mailpit"
+    mailPort: "1025"
+    mailFrom: "noreply@bizcord.local"
+    mailSmtpAuth: "false"
+    mailSmtpStarttls: "false"
+    jwtPrivateKeyPath: /app/keys/jwtRS256.key
+    jwtPublicKeyPath: /app/keys/jwtRS256.key.pub
+  secrets:
+    dbPassword: ""
+    minioAccessKey: minioadmin
+    minioSecretKey: minioadmin
+    mediasoupApiSecret: ""
+    mailUsername: ""
+    mailPassword: ""
+    # Injected at deploy time via --set-file (never committed)
+    jwtPrivateKey: ""
+    jwtPublicKey: ""
+
+# ─────────────────────────────────────────────
+# Frontend (Angular + nginx)
+# ─────────────────────────────────────────────
+frontend:
+  image:
+    tag: latest
+  replicas: 1
+  port: 8080
+  # nginx.conf uses ${BACKEND_URL} for /api and /ws proxying
+  backendUrl: "http://bizcord-backend:8080"
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+  service:
+    type: ClusterIP
+    nodePort: null
+
+# ─────────────────────────────────────────────
+# Mediasoup (WebRTC SFU)
+# ─────────────────────────────────────────────
+mediasoup:
+  image:
+    tag: latest
+  port: 3000
+  rtcMinPort: 52000
+  rtcMaxPort: 52999
+  listenIp: "0.0.0.0"
+  # Must be set to node's public/LAN IP for WebRTC ICE to work
+  announcedIp: "127.0.0.1"
+  # hostNetwork mirrors compose network_mode: host — required for UDP media ports
+  hostNetwork: true
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+  secrets:
+    apiSecret: ""
+
+# ─────────────────────────────────────────────
+# PostgreSQL
+# ─────────────────────────────────────────────
+postgres:
+  image: postgres:18-alpine3.23
+  port: 5432
+  database: bizcord
+  username: admin
+  pvc:
+    size: 1Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  secrets:
+    password: ""
+
+# ─────────────────────────────────────────────
+# MinIO (S3-compatible object storage)
+# ─────────────────────────────────────────────
+minio:
+  image: minio/minio:latest
+  ports:
+    api: 9000
+    console: 9001
+  pvc:
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  secrets:
+    rootUser: minioadmin
+    rootPassword: ""
+
+# ─────────────────────────────────────────────
+# Mailpit (dev SMTP catcher — disabled by default)
+# ─────────────────────────────────────────────
+mailpit:
+  enabled: false
+  image: axllent/mailpit:latest
+  ports:
+    smtp: 1025
+    ui: 8025
+
+# ─────────────────────────────────────────────
+# Ingress (disabled by default — enable for prod)
+# ─────────────────────────────────────────────
+ingress:
+  enabled: false
+  className: nginx
+  host: ""
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "86400"
+  tls:
+    enabled: false
+    secretName: bizcord-tls
