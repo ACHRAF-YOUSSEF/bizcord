@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bizcord-mediasoup
+  namespace: {{ include "bizcord.namespace" . }}
+  labels:
+    {{- include "bizcord.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mediasoup
+spec:
+  # Only 1 replica per node when hostNetwork is true — multiple pods would conflict on UDP ports
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: bizcord-mediasoup
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: bizcord-mediasoup
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: mediasoup
+    spec:
+      # Mirrors compose network_mode: host — required so the pod binds UDP 52000-52999
+      # on the node's network interface directly (no K8s NAT for media ports)
+      hostNetwork: {{ .Values.mediasoup.hostNetwork }}
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+        - name: mediasoup
+          image: {{ .Values.global.imageRegistry }}/bizcord-mediasoup:{{ .Values.mediasoup.image.tag }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.mediasoup.port }}
+              protocol: TCP
+          env:
+            - name: PORT
+              value: {{ .Values.mediasoup.port | quote }}
+            - name: LISTEN_IP
+              value: {{ .Values.mediasoup.listenIp | quote }}
+            - name: ANNOUNCED_IP
+              value: {{ .Values.mediasoup.announcedIp | quote }}
+            - name: RTC_MIN_PORT
+              value: {{ .Values.mediasoup.rtcMinPort | quote }}
+            - name: RTC_MAX_PORT
+              value: {{ .Values.mediasoup.rtcMaxPort | quote }}
+            - name: API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: bizcord-mediasoup-secret
+                  key: API_SECRET
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.mediasoup.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.mediasoup.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.mediasoup.resources | nindent 12 }}

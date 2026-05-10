@@ -1,0 +1,24 @@
+{{- if .Values.mailpit.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: mailpit
+  namespace: {{ include "bizcord.namespace" . }}
+  labels:
+    {{- include "bizcord.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mailpit
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: bizcord-mailpit
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - name: smtp
+      port: {{ .Values.mailpit.ports.smtp }}
+      targetPort: smtp
+      protocol: TCP
+    - name: ui
+      port: {{ .Values.mailpit.ports.ui }}
+      targetPort: ui
+      protocol: TCP
+{{- end }}

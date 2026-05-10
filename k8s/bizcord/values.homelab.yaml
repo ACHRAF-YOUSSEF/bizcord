@@ -1,0 +1,52 @@
+global:
+  namespace: bizcord
+  imagePullPolicy: IfNotPresent
+  # k3s default — switch to "longhorn" if you have Longhorn installed
+  storageClass: local-path
+
+backend:
+  image:
+    tag: latest
+  config:
+    corsAllowedOriginPatterns: "http://bizcord.local,https://bizcord.local"
+    frontendUrl: "http://bizcord.local"
+    cookieSecure: "false"   # set "true" if you add TLS
+    mailHost: mailpit
+  secrets:
+    dbPassword: ""           # set via --set or env var in deploy script
+    mediasoupApiSecret: ""
+
+frontend:
+  service:
+    type: ClusterIP           # Ingress fronts it
+
+mediasoup:
+  # Set to your homelab machine's LAN IP so browsers can reach UDP ports
+  # e.g. "192.168.1.100"
+  announcedIp: ""
+  secrets:
+    apiSecret: ""
+
+postgres:
+  pvc:
+    size: 5Gi
+
+minio:
+  pvc:
+    size: 20Gi
+
+mailpit:
+  enabled: true              # handy for homelab email testing
+
+ingress:
+  enabled: true
+  # Use "traefik" if on k3s default, "nginx" if you installed ingress-nginx
+  className: traefik
+  host: bizcord.local
+  annotations:
+    # Remove proxy-body-size annotation if using traefik (set via middleware instead)
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "86400"
+  tls:
+    enabled: false           # flip to true + add cert-manager annotation for HTTPS
+    secretName: bizcord-tls

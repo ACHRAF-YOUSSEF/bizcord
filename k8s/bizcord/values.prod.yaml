@@ -1,0 +1,73 @@
+global:
+  namespace: bizcord-prod
+  imagePullPolicy: IfNotPresent
+  # Override with your cloud provider's storage class (e.g. gp3, longhorn, managed-nfs)
+  storageClass: ""
+
+backend:
+  image:
+    tag: "1.0.0"
+  replicas: 2
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 1Gi
+  config:
+    corsAllowedOriginPatterns: "https://bizcord.example.com"
+    frontendUrl: "https://bizcord.example.com"
+    cookieSecure: "true"
+    mailHost: smtp.sendgrid.net
+    mailPort: "587"
+    mailSmtpAuth: "true"
+    mailSmtpStarttls: "true"
+    mailFrom: "noreply@bizcord.example.com"
+  # All secrets injected via --set flags in deploy-prod.sh — never store here
+
+frontend:
+  image:
+    tag: "1.0.0"
+  replicas: 2
+  service:
+    type: ClusterIP
+
+mediasoup:
+  image:
+    tag: "1.0.0"
+  # Set to the node's public IP at deploy time:
+  #   --set mediasoup.announcedIp="$NODE_PUBLIC_IP"
+  announcedIp: ""
+  resources:
+    requests:
+      cpu: "1"
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 1Gi
+
+postgres:
+  pvc:
+    size: 20Gi
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+
+minio:
+  pvc:
+    size: 50Gi
+
+mailpit:
+  enabled: false
+
+ingress:
+  enabled: true
+  host: bizcord.example.com
+  tls:
+    enabled: true
+    secretName: bizcord-tls

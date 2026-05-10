@@ -1,0 +1,41 @@
+{{- if .Values.mailpit.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bizcord-mailpit
+  namespace: {{ include "bizcord.namespace" . }}
+  labels:
+    {{- include "bizcord.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mailpit
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: bizcord-mailpit
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: bizcord-mailpit
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: mailpit
+    spec:
+      containers:
+        - name: mailpit
+          image: {{ .Values.mailpit.image }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: smtp
+              containerPort: {{ .Values.mailpit.ports.smtp }}
+              protocol: TCP
+            - name: ui
+              containerPort: {{ .Values.mailpit.ports.ui }}
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+{{- end }}

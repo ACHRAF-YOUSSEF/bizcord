@@ -1,0 +1,33 @@
+---
+# ClusterIP for backend→mediasoup HTTP communication (e.g. APP_MEDIASOUP_URL)
+# UDP media ports are not routed through K8s Services — clients reach them
+# directly via the node IP returned in ICE candidates (ANNOUNCED_IP)
+apiVersion: v1
+kind: Service
+metadata:
+  name: bizcord-mediasoup
+  namespace: {{ include "bizcord.namespace" . }}
+  labels:
+    {{- include "bizcord.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mediasoup
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: bizcord-mediasoup
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - name: http
+      port: {{ .Values.mediasoup.port }}
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: bizcord-mediasoup-secret
+  namespace: {{ include "bizcord.namespace" . }}
+  labels:
+    {{- include "bizcord.labels" . | nindent 4 }}
+type: Opaque
+stringData:
+  API_SECRET: {{ .Values.mediasoup.secrets.apiSecret | quote }}
